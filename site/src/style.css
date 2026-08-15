@@ -1,0 +1,52 @@
+:root {
+  --blue: #4d6bfe;
+  --blue-deep: #3b57d9;
+  --blue-ink: #2b3f9e;
+  --blue-soft: rgba(77, 107, 254, 0.08);
+  --paper: #fcfdff;
+  --surface: #ffffff;
+  --line: #e3e8f7;
+  --ink: #131722;
+  --ink-soft: #565d70;
+  --faint: #99a0b5;
+  --body-text: #282d3a;
+  --inline-code: #2b3f9e;
+  --code-surface: #f4f6fd;
+  --code-text: #2c3040;
+  --shadow: rgba(19, 23, 34, 0.35);
+  --syntax-comment: #99a0b5;
+  --syntax-keyword: #4d6bfe;
+  --syntax-string: #2e7d46;
+  --syntax-number: #a5631c;
+  --syntax-title: #131722;
+  --syntax-type: #0f7b6c;
+  --syntax-variable: #565d70;
+  --radius: 14px;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+::selection {
+  background: var(--blue);
+  color: #fff;
+}
