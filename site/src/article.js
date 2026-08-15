@@ -44,3 +44,7 @@ md.renderer.rules.heading_open = (tokens, idx) => {
 
 export const articleHtml = md.render(articleMd)
 export const articleToc = toc
+
+// 按 h2 切成段：sections[0] 是 h1 + 范围声明，之后每段对应一个章节，
+// 供 ArticleBody 在章节之间注入插图
+export const articleSections = articleHtml.split(/(?=<h2 id=)/)
