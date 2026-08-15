@@ -1,15 +1,71 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { articleHtml } from '../article.js'
+import { articleSections } from '../article.js'
 import { linkifySourceRefs } from '../src-refs.js'
+import FigurePackaging from './figures/FigurePackaging.vue'
+import FigureMountStyles from './figures/FigureMountStyles.vue'
+import FigureTwoPaths from './figures/FigureTwoPaths.vue'
+import FigureInject from './figures/FigureInject.vue'
+import FigureEffect from './figures/FigureEffect.vue'
 
 const bodyRef = ref(null)
+
+// 插图注入位：after 给出锚点文本，图插到包含该文本的块级元素之后；
+// 没有 after 则插到该节末尾。同一节可以有多张图、各自带锚点
+const figures = [
+  { sec: 1, after: '不受惊动', is: FigureMountStyles },
+  { sec: 1, after: '一行也不用动', is: FigurePackaging },
+  { sec: 2, is: FigureTwoPaths },
+  { sec: 4, is: FigureInject },
+  { sec: 5, is: FigureEffect },
+]
+
+const CLOSERS = ['</ul>', '</ol>', '</p>', '</pre>', '</blockquote>']
+
+function splitAfter(html, marker) {
+  const idx = html.indexOf(marker)
+  if (idx === -1) return [html, '']
+  let end = -1
+  for (const tag of CLOSERS) {
+    const t = html.indexOf(tag, idx)
+    if (t !== -1 && (end === -1 || t < end)) end = t + tag.length
+  }
+  return end === -1 ? [html, ''] : [html.slice(0, end), html.slice(end)]
+}
+
+// 展开成线性渲染序列：html 段与插图交替
+const blocks = []
+articleSections.forEach((html, i) => {
+  const figs = figures.filter((f) => f.sec === i)
+  const endFigs = []
+  let rest = html
+  for (const f of figs) {
+    if (!f.after) {
+      endFigs.push(f)
+      continue
+    }
+    const [before, after] = splitAfter(rest, f.after)
+    if (!after) {
+      endFigs.push(f)
+      continue
+    }
+    blocks.push({ html: before }, { figure: f.is })
+    rest = after
+  }
+  blocks.push({ html: rest })
+  for (const f of endFigs) blocks.push({ figure: f.is })
+})
 
 onMounted(() => linkifySourceRefs(bodyRef.value))
 </script>
 
 <template>
-  <main ref="bodyRef" class="content" v-html="articleHtml"></main>
+  <main ref="bodyRef" class="content">
+    <template v-for="(b, i) in blocks" :key="i">
+      <component :is="b.figure" v-if="b.figure" />
+      <section v-else v-html="b.html"></section>
+    </template>
+  </main>
 </template>
 
 <style scoped>
@@ -41,10 +97,6 @@ onMounted(() => linkifySourceRefs(bodyRef.value))
   line-height: 1.35;
   counter-increment: h2;
   border-bottom: 1px solid var(--line);
-}
-
-.content :deep(h2):first-of-type {
-  margin-top: 48px;
 }
 
 /* the index sits above the title like a node label */
