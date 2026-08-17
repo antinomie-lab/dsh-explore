@@ -35,11 +35,12 @@ md.core.ruler.push('strip-h2-numerals', (state) => {
 md.renderer.rules.heading_open = (tokens, idx) => {
   const token = tokens[idx]
   const text = tokens[idx + 1]?.content ?? ''
-  const id = `sec-${toc.length}`
   if (token.tag === 'h2' || token.tag === 'h3') {
+    const id = `sec-${toc.length}`
     toc.push({ level: token.tag, text, id })
+    return `<${token.tag} id="${id}" class="md-heading">`
   }
-  return `<${token.tag} id="${id}" class="md-heading">`
+  return `<${token.tag} class="md-heading">`
 }
 
 export const articleHtml = md.render(articleMd)
