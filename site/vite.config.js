@@ -2,6 +2,11 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
+  // 部署在子路径下：base 改产物里的资源引用，outDir 让文件落进同名目录
+  base: '/dsh-explore/',
+  build: {
+    outDir: 'dist/dsh-explore',
+  },
   plugins: [vue()],
   server: {
     fs: {
