@@ -1,6 +1,10 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { articleToc as toc } from '../article.js'
+
+const props = defineProps({
+  toc: { type: Array, required: true },
+  motif: { type: String, default: 'tree' },
+})
 
 const activeId = ref('')
 
@@ -11,7 +15,7 @@ function onScroll() {
   requestAnimationFrame(() => {
     ticking = false
     let current = ''
-    for (const h of toc) {
+    for (const h of props.toc) {
       const el = document.getElementById(h.id)
       if (el && el.getBoundingClientRect().top <= 120) current = h.id
     }
@@ -38,11 +42,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside class="toc">
+  <aside class="toc" :class="`motif-${motif}`">
     <p class="toc-title">目录</p>
     <nav>
       <a
-        v-for="h in toc"
+        v-for="h in props.toc"
         :key="h.id"
         class="toc-item"
         :class="[`toc-${h.level}`, { active: activeId === h.id }]"
@@ -56,7 +60,9 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* a tree of branches: h2 items are ├─ limbs, h3 the └─ twigs */
+/* toc 的两种语言，随文章 motif 走：
+ *   tree     —— ├─/└─ 树形分支（cordis 那篇，目录就是插件树的缩略）
+ *   dialogue —— 竖直导轨 + 模块节点（当前节实心，扁平章节不假装是树） */
 .toc {
   position: sticky;
   top: 40px;
@@ -74,7 +80,6 @@ onBeforeUnmount(() => {
 
 .toc-item {
   display: block;
-  padding: 5px 0;
   font-size: 13px;
   line-height: 1.5;
   color: var(--ink-soft);
@@ -83,41 +88,99 @@ onBeforeUnmount(() => {
   transition: color 0.15s ease;
 }
 
-.toc-item::before {
+.toc-item:hover,
+.toc-item.active {
+  color: var(--blue-deep);
+}
+
+.toc-item.active {
+  font-weight: 600;
+}
+
+/* ---------- tree motif：├─/└─ 分支 ---------- */
+.motif-tree .toc-item {
+  padding: 5px 0;
+}
+
+.motif-tree .toc-item::before {
   font-family: var(--font-mono);
   color: #c3cfff;
   margin-right: 8px;
   transition: color 0.15s ease;
 }
 
-.toc-item.toc-h2::before {
+.motif-tree .toc-item.toc-h2::before {
   content: '├─';
 }
 
-.toc-item.toc-h3 {
+.motif-tree .toc-item.toc-h3 {
   padding-left: 18px;
   font-size: 12.5px;
 }
 
-.toc-item.toc-h3::before {
+.motif-tree .toc-item.toc-h3::before {
   content: '└─';
 }
 
-.toc-item:hover {
-  color: var(--blue-deep);
-}
-
-.toc-item:hover::before {
+.motif-tree .toc-item:hover::before,
+.motif-tree .toc-item.active::before {
   color: var(--blue);
 }
 
-.toc-item.active {
-  color: var(--blue-deep);
-  font-weight: 600;
+/* ---------- dialogue motif：导轨 + 模块节点 ---------- */
+.motif-dialogue nav {
+  position: relative;
 }
 
-.toc-item.active::before {
-  color: var(--blue);
+.motif-dialogue nav::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--line);
+}
+
+.motif-dialogue .toc-item {
+  position: relative;
+  padding: 5px 0 5px 20px;
+}
+
+.motif-dialogue .toc-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid #c3cfff;
+  border-radius: 2px;
+  background: var(--paper);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.motif-dialogue .toc-item.toc-h3 {
+  padding-left: 34px;
+  font-size: 12.5px;
+}
+
+.motif-dialogue .toc-item.toc-h3::before {
+  width: 5px;
+  height: 5px;
+  left: 1.5px;
+}
+
+.motif-dialogue .toc-item:hover::before {
+  border-color: var(--blue);
+}
+
+.motif-dialogue .toc-item.active::before {
+  background: var(--blue);
+  border-color: var(--blue);
 }
 
 @media (max-width: 1023px) {

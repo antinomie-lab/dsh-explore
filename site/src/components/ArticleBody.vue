@@ -1,24 +1,29 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-import { articleSections } from '../article.js'
+import { computed, onMounted, ref } from 'vue'
 import { linkifySourceRefs } from '../src-refs.js'
 import FigurePackaging from './figures/FigurePackaging.vue'
 import FigureMountStyles from './figures/FigureMountStyles.vue'
 import FigureTwoPaths from './figures/FigureTwoPaths.vue'
 import FigureInject from './figures/FigureInject.vue'
 import FigureEffect from './figures/FigureEffect.vue'
+import FigureUsage from './figures/FigureUsage.vue'
+
+const props = defineProps({ article: { type: Object, required: true } })
 
 const bodyRef = ref(null)
 
-// 插图注入位：after 给出锚点文本，图插到包含该文本的块级元素之后；
-// 没有 after 则插到该节末尾。同一节可以有多张图、各自带锚点
-const figures = [
-  { sec: 1, after: '不受惊动', is: FigureMountStyles },
-  { sec: 1, after: '一行也不用动', is: FigurePackaging },
-  { sec: 2, is: FigureTwoPaths },
-  { sec: 4, is: FigureInject },
-  { sec: 5, is: FigureEffect },
-]
+// 插图注入位（按文章 slug）：after 给出锚点文本，图插到包含该文本的
+// 块级元素之后；没有 after 则插到该节末尾。同一节可以有多张图、各自带锚点
+const figureSets = {
+  'cordis-from-dsh': [
+    { sec: 1, after: '不受惊动', is: FigureMountStyles },
+    { sec: 1, after: '一行也不用动', is: FigurePackaging },
+    { sec: 2, is: FigureTwoPaths },
+    { sec: 4, is: FigureInject },
+    { sec: 5, is: FigureEffect },
+  ],
+  'dsh-vs-dimagent': [{ sec: 2, is: FigureUsage }],
+}
 
 const CLOSERS = ['</ul>', '</ol>', '</p>', '</pre>', '</blockquote>']
 
@@ -34,33 +39,38 @@ function splitAfter(html, marker) {
 }
 
 // 展开成线性渲染序列：html 段与插图交替
-const blocks = []
-articleSections.forEach((html, i) => {
-  const figs = figures.filter((f) => f.sec === i)
-  const endFigs = []
-  let rest = html
-  for (const f of figs) {
-    if (!f.after) {
-      endFigs.push(f)
-      continue
+const blocks = computed(() => {
+  const out = []
+  const figs = figureSets[props.article.slug] ?? []
+  props.article.sections.forEach((html, i) => {
+    const endFigs = []
+    let rest = html
+    for (const f of figs.filter((f) => f.sec === i)) {
+      if (!f.after) {
+        endFigs.push(f)
+        continue
+      }
+      const [before, after] = splitAfter(rest, f.after)
+      if (!after) {
+        endFigs.push(f)
+        continue
+      }
+      out.push({ html: before }, { figure: f.is })
+      rest = after
     }
-    const [before, after] = splitAfter(rest, f.after)
-    if (!after) {
-      endFigs.push(f)
-      continue
-    }
-    blocks.push({ html: before }, { figure: f.is })
-    rest = after
-  }
-  blocks.push({ html: rest })
-  for (const f of endFigs) blocks.push({ figure: f.is })
+    out.push({ html: rest })
+    for (const f of endFigs) out.push({ figure: f.is })
+  })
+  return out
 })
 
-onMounted(() => linkifySourceRefs(bodyRef.value))
+onMounted(() => {
+  if (props.article.srcRefs) linkifySourceRefs(bodyRef.value)
+})
 </script>
 
 <template>
-  <main ref="bodyRef" class="content">
+  <main ref="bodyRef" class="content" :class="`motif-${article.motif}`">
     <template v-for="(b, i) in blocks" :key="i">
       <component :is="b.figure" v-if="b.figure" />
       <section v-else v-html="b.html"></section>
@@ -381,5 +391,64 @@ onMounted(() => linkifySourceRefs(bodyRef.value))
 
 .content :deep(tbody tr:last-child td) {
   border-bottom: none;
+}
+
+/* ---------- dialogue motif: 对话 × 评审的文章语言 ----------
+ * blockquote 是引文（agent 的原话）而不是注解卡片：大引号 + 左边线；
+ * bullet 从模块方块换成编辑式的破折号；h3 的分支符换成对话标记 » */
+
+.content.motif-dialogue :deep(blockquote) {
+  margin: 28px 0;
+  padding: 22px 24px 22px 56px;
+  border: none;
+  border-radius: 14px;
+  background: var(--code-surface);
+  box-shadow: none;
+  font-size: 15px;
+}
+
+.content.motif-dialogue :deep(blockquote)::before {
+  content: '“';
+  left: 18px;
+  top: 14px;
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  background: none;
+  font-family: Georgia, 'Songti SC', serif;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--blue);
+}
+
+.content.motif-dialogue :deep(blockquote)::after {
+  content: none;
+}
+
+.content.motif-dialogue :deep(blockquote p) {
+  color: var(--ink);
+}
+
+.content.motif-dialogue :deep(blockquote p + p) {
+  margin-top: 10px;
+}
+
+.content.motif-dialogue :deep(ul li)::before {
+  content: '—';
+  left: -24px;
+  top: 0;
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  background: none;
+  transform: none;
+  color: var(--faint);
+}
+
+.content.motif-dialogue :deep(h3)::before {
+  content: '»';
+  font-size: 15px;
 }
 </style>

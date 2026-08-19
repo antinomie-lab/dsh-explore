@@ -1,16 +1,12 @@
 <script setup>
+import { articles } from '../articles.js'
 import MotifGlyph from './MotifGlyph.vue'
-
-defineProps({ article: { type: Object, required: true } })
 </script>
 
 <template>
-  <header class="hero">
-    <div class="masthead">
-      <a class="masthead-brand" href="#/" title="返回文章列表">
-        <MotifGlyph :motif="article.motif" />
-        {{ article.brand }}
-      </a>
+  <div class="index">
+    <header class="masthead">
+      <span class="masthead-brand">dsh-explore</span>
       <a
         class="masthead-repo"
         href="https://github.com/antinomie-lab/dsh-explore"
@@ -23,23 +19,29 @@ defineProps({ article: { type: Object, required: true } })
         </svg>
         dsh-explore
       </a>
-    </div>
-    <div class="hero-inner">
-      <h1 class="title">
-        {{ article.title }}
-        <span class="title-sub">{{ article.sub }}</span>
-      </h1>
-      <p class="lede">{{ article.lede }}</p>
-    </div>
-  </header>
+    </header>
+
+    <main class="list">
+      <p class="kicker">PASSAGES</p>
+      <a v-for="a in articles" :key="a.slug" class="entry" :href="`#/${a.slug}`">
+        <MotifGlyph :motif="a.motif" class="entry-glyph" />
+        <div class="entry-text">
+          <h2 class="entry-title">
+            {{ a.title }}
+            <span class="entry-sub">{{ a.sub }}</span>
+          </h2>
+          <p class="entry-lede">{{ a.lede }}</p>
+        </div>
+      </a>
+    </main>
+  </div>
 </template>
 
 <style scoped>
-.hero {
-  border-bottom: 1px solid var(--line);
+.index {
+  min-height: 100vh;
 }
 
-/* masthead: quiet hairline with the brand mark */
 .masthead {
   max-width: 1080px;
   margin: 0 auto;
@@ -55,12 +57,8 @@ defineProps({ article: { type: Object, required: true } })
 }
 
 .masthead-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   color: var(--ink);
   font-weight: 600;
-  text-decoration: none;
 }
 
 .masthead-repo {
@@ -82,34 +80,63 @@ defineProps({ article: { type: Object, required: true } })
   color: var(--blue-deep);
 }
 
-/* the title block aligns with the article column below (past the TOC rail) */
-.hero-inner {
-  max-width: 1080px;
+.list {
+  max-width: 720px;
   margin: 0 auto;
-  padding: 72px 32px 56px calc(32px + 300px);
+  padding: 88px 32px 120px;
 }
 
-.title {
+.kicker {
+  margin: 0 0 32px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  color: var(--faint);
+}
+
+.entry {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 28px 0;
+  border-top: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+
+.entry:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.entry-glyph {
+  margin-top: 8px;
+}
+
+.entry-title {
   margin: 0;
-  font-size: clamp(36px, 5vw, 54px);
-  line-height: 1.2;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
+  transition: color 0.15s ease;
 }
 
-.title-sub {
+.entry:hover .entry-title {
+  color: var(--blue-deep);
+}
+
+.entry-sub {
   display: block;
-  margin-top: 12px;
-  font-size: clamp(18px, 2.4vw, 24px);
+  margin-top: 4px;
+  font-size: 15px;
   font-weight: 400;
   color: var(--ink-soft);
 }
 
-.lede {
-  margin: 28px 0 0;
-  max-width: 520px;
+.entry-lede {
+  margin: 12px 0 0;
+  font-size: 14px;
   color: var(--ink-soft);
-  font-size: 15.5px;
+  max-width: 560px;
 }
 
 @media (max-width: 1023px) {
@@ -117,8 +144,8 @@ defineProps({ article: { type: Object, required: true } })
     padding: 18px 24px;
   }
 
-  .hero-inner {
-    padding: 64px 24px 72px;
+  .list {
+    padding: 56px 24px 72px;
   }
 }
 </style>

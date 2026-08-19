@@ -1,20 +1,35 @@
 <script setup>
+import { computed, watchEffect } from 'vue'
+import { route } from './router.js'
+import { findArticle } from './articles.js'
 import ProgressBar from './components/ProgressBar.vue'
 import SiteHeader from './components/SiteHeader.vue'
 import TocNav from './components/TocNav.vue'
 import ArticleBody from './components/ArticleBody.vue'
 import SiteFooter from './components/SiteFooter.vue'
+import ArticleIndex from './components/ArticleIndex.vue'
+
+const current = computed(() => findArticle(route.value))
+
+watchEffect(() => {
+  document.title = current.value
+    ? `${current.value.title} · ${current.value.sub}`
+    : 'dsh-explore'
+})
 </script>
 
 <template>
   <div class="page">
-    <ProgressBar />
-    <SiteHeader />
-    <div class="layout">
-      <TocNav />
-      <ArticleBody />
-    </div>
-    <SiteFooter />
+    <template v-if="current">
+      <ProgressBar />
+      <SiteHeader :article="current" />
+      <div :key="current.slug" class="layout">
+        <TocNav :toc="current.toc" :motif="current.motif" />
+        <ArticleBody :article="current" />
+      </div>
+      <SiteFooter :note="current.footer" />
+    </template>
+    <ArticleIndex v-else />
   </div>
 </template>
 
